@@ -1,0 +1,9 @@
+[package]
+name = "cityrade-types"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+chrono = { version = "0.4.40", features = ["serde"] }
+rayon = "1.10.0"
+serde = { version = "1.0.218", features = ["derive"] }

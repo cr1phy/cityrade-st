@@ -1,0 +1,9 @@
+[package]
+name = "cityrade"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+cityrade-types = { path = "cityrade-types" }
+cityrade-macros = { path = "cityrade-macros" }
+dioxus = "0.6.3"
