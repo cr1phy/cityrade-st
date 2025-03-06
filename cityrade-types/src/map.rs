@@ -9,9 +9,9 @@ pub struct World {
 
 impl World {
     pub fn new() -> World {
-        World {
-            map: WorldMap::default(),
-            cities: Vec::new(),
+        Self {
+            seed: rand::random(),
+            ..Default::default()
         }
     }
 
