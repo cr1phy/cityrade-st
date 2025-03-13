@@ -1,3 +1,8 @@
+pub mod account;
 pub mod city;
-pub mod map;
+pub mod world;
 pub mod plugin;
+pub mod building;
+pub mod resources;
+#[cfg(test)]
+mod tests;
