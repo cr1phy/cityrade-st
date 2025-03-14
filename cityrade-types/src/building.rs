@@ -20,7 +20,7 @@ impl Building {
         Building {
             name,
             building_type,
-            level: 1, // Стартуем с первого уровня
+            level: 1,
         }
     }
 

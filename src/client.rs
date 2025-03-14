@@ -1,69 +1,102 @@
-use tungstenite::stream::MaybeTlsStream;
-use tungstenite::{connect, Message};
-use serde::{Serialize, Deserialize};
-use std::io::{self, Write};
-use std::net::SocketAddr;
+use std::time::Duration;
+use crossterm::{event::{self, Event, KeyCode}, terminal::disable_raw_mode};
+use ratatui::{
+    layout::{Constraint, Direction, Layout},
+    widgets::{Block, Borders, List, ListItem, Paragraph},
+};
+use color_eyre::Result;
 
-use crate::get_user_input;
-
-#[derive(Serialize, Deserialize, Debug)]
-struct UserCredentials {
-    username: String,
-    password: String,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-struct ServerResponse {
-    message: String,
-    success: bool,
-}
+// Импортируем нашу структуру для автоматической очистки терминала
+use crate::dropguard::TerminalCleanup;
 
 #[tokio::main]
-pub async fn main() {
-    // Устанавливаем соединение с сервером по WebSocket
-    let server_address: SocketAddr = "127.0.0.1:8080".parse().unwrap();
-    let (mut socket, _response) = connect(format!("ws://{}", server_address)).expect("Failed to connect");
+pub async fn run() -> Result<()> {
+    // Создаём guard для терминала
+    let mut term_guard = TerminalCleanup::new().unwrap();
+    let terminal = term_guard.terminal();
 
-    // Пример регистрации пользователя
-    println!("Введите имя пользователя:");
-    let mut username = String::new();
-    io::stdout().flush().unwrap();
-    io::stdin().read_line(&mut username).unwrap();
-
-    println!("Введите пароль:");
-    let mut password = String::new();
-    io::stdout().flush().unwrap();
-    io::stdin().read_line(&mut password).unwrap();
-
-    let user_credentials = UserCredentials {
-        username: username.trim().to_string(),
-        password: password.trim().to_string(),
-    };
-
-    // Отправка данных на сервер для авторизации/регистрации
-    let serialized_data = serde_json::to_string(&user_credentials).unwrap();
-    socket.send(Message::Text(serialized_data.into())).expect("Failed to send data");
-
-    // Получаем ответ от сервера
-    let response = socket.read().expect("Failed to read response");
-    let response_data: ServerResponse = serde_json::from_str(&response.to_string()).unwrap();
-
-    if response_data.success {
-        println!("Успешный вход: {}", response_data.message);
-    } else {
-        println!("Ошибка: {}", response_data.message);
-    }
+    // Заранее заданный список серверов
+    let servers = vec![
+        "127.0.0.1:8080".to_string(),
+        "127.0.0.1:8081".to_string(),
+        "192.168.1.10:8080".to_string(),
+    ];
+    let mut selected = 0;
+    let mut input = String::new(); // для будущих команд
 
     loop {
-        let input = get_user_input();
-        match input.as_str() {
-            "exit" => break,
-            _ => send_user_action(&mut socket, input),
+        terminal.draw(|f| {
+            let size = f.area();
+            let chunks = Layout::default()
+                .direction(Direction::Vertical)
+                .margin(2)
+                .constraints(
+                    [
+                        Constraint::Length(3),  // Заголовок
+                        Constraint::Min(5),     // Список серверов
+                        Constraint::Length(3),  // Панель ввода
+                    ]
+                    .as_ref(),
+                )
+                .split(size);
+
+            let header = Paragraph::new("Выберите сервер (↑/↓, Enter для подключения, q для выхода)")
+                .block(Block::default().borders(Borders::ALL).title("Клиент"));
+            f.render_widget(header, chunks[0]);
+
+            let items: Vec<ListItem> = servers
+                .iter()
+                .enumerate()
+                .map(|(i, s)| {
+                    let content = if i == selected {
+                        format!("> {}", s)
+                    } else {
+                        format!("  {}", s)
+                    };
+                    ListItem::new(content)
+                })
+                .collect();
+            let server_list = List::new(items)
+                .block(Block::default().borders(Borders::ALL).title("Сервера"));
+            f.render_widget(server_list, chunks[1]);
+
+            let input_paragraph = Paragraph::new(input.clone())
+                .block(Block::default().borders(Borders::ALL).title("Команда"));
+            f.render_widget(input_paragraph, chunks[2]);
+        })?;
+
+        if event::poll(Duration::from_millis(200))? {
+            if let Event::Key(key) = event::read()? {
+                match key.code {
+                    KeyCode::Char('q') => {
+                        // Выход из TUI
+                        break;
+                    }
+                    KeyCode::Down => {
+                        if selected < servers.len() - 1 {
+                            selected += 1;
+                        }
+                    }
+                    KeyCode::Up => {
+                        if selected > 0 {
+                            selected -= 1;
+                        }
+                    }
+                    KeyCode::Enter => {
+                        let chosen_server = &servers[selected];
+                        // Выходим из TUI и переходим к подключению
+                        disable_raw_mode()?;
+                        println!("Подключение к серверу: {}", chosen_server);
+                        // Здесь можно добавить вызов функции подключения
+                        return Ok(());
+                    }
+                    _ => {}
+                }
+            }
         }
     }
-}
 
-fn send_user_action(socket: &mut tungstenite::protocol::WebSocket<MaybeTlsStream<std::net::TcpStream>>, action: String) {
-    let message = format!("Action: {}", action);
-    socket.send(Message::Text(message.into())).expect("Failed to send action");
+    // Если цикл завершился (нажато 'q'), завершаем программу
+    // Благодаря Drop для term_guard, терминал будет восстановлен корректно.
+    std::process::exit(0);
 }

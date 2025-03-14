@@ -10,3 +10,4 @@ rayon = "1.10.0"
 serde = { version = "1.0.218", features = ["derive"] }
 jsonwebtoken = "9.3.1"
 hashbrown = { version = "0.15.2", features = ["serde"] }
+async-trait = "0.1.87"
