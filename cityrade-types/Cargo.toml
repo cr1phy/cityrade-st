@@ -2,12 +2,13 @@
 name = "cityrade-types"
 version = "0.1.0"
 edition = "2024"
+publish = true
 
 [dependencies]
 chrono = { version = "0.4.40", features = ["serde"] }
 rand = "0.9.0"
 rayon = "1.10.0"
-serde = { version = "1.0.218", features = ["derive"] }
+serde = { version = "1.0.219", features = ["derive"] }
 jsonwebtoken = "9.3.1"
 hashbrown = { version = "0.15.2", features = ["serde"] }
-async-trait = "0.1.87"
+async-trait = "0.1.88"

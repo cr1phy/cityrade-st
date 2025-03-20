@@ -2,12 +2,13 @@
 name = "cityrade"
 version = "0.1.0"
 edition = "2024"
+publish = true
 
 [dependencies]
 cityrade-types = { path = "cityrade-types" }
 cityrade-macros = { path = "cityrade-macros" }
 dioxus = "0.6.3"
-tokio = { version = "1.43.0", features = ["macros", "rt-multi-thread", "time"] }
+tokio = { version = "1.44.1", features = ["macros", "rt-multi-thread", "time"] }
 tungstenite = { version = "0.26.2", features = ["rustls"] }
 serde_json = "1.0.140"
 serde = { version = "1.0.219", features = ["derive"] }
@@ -16,5 +17,8 @@ color-backtrace = "0.7.0"
 tokio-tungstenite = { version = "0.26.2", features = ["rustls"] }
 futures-util = "0.3.31"
 crossterm = "0.28.1"
-ratatui = "0.29.0"
+ratatui = { version = "0.29.0", features = ["all-widgets"] }
 anyhow = "1.0.97"
+clap = { version = "4.5.32", features = ["derive"] }
+axum = "0.8.1"
+chrono = "0.4.40"

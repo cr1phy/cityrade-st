@@ -1,32 +1,32 @@
-use std::io;
-
 mod client;
 mod server;
-mod dropguard;
 
-fn main() -> color_eyre::Result<()> {
-    color_eyre::install()?;
-    color_backtrace::install();
+use clap::{Parser, arg};
 
-    println!("Введите режим (server или client): ");
-    let mode = get_user_input();
-
-    if mode.eq_ignore_ascii_case("server") {
-        server::serve()?;
-    } else if mode.eq_ignore_ascii_case("client") {
-        client::run()?;
-    } else {
-        println!("Неизвестный режим '{}'. Запускаем клиент по умолчанию.", mode);
-        client::run()?;
-    }
-
-    Ok(())
+#[derive(Debug, Parser)]
+#[command(name = "cityrade", version, about, long_about)]
+struct Args {
+    #[arg(short, long)]
+    serve: bool,
+    #[arg(short, long)]
+    web: bool,
 }
 
-fn get_user_input() -> String {
-    let mut input = String::new();
-    std::io::stdin()
-        .read_line(&mut input)
-        .expect("Не удалось прочитать строку");
-    input.trim().to_string()
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    let args = Args::parse();
+
+    let mode = match (args.serve, args.web) {
+        (true, false) => server::serve().await,
+        // (false, true) => client::web().await,
+        (false, false) => client::run().await,
+        _ => anyhow::bail!("Serving in web? Really?"),
+    };
+
+    if let Err(e) = mode {
+        eprintln!("An error occurred: {}", e);
+        std::process::exit(1);
+    };
+
+    Ok(())
 }
