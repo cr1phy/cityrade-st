@@ -7,6 +7,9 @@ pub mod resources;
 pub mod chat;
 pub mod generator;
 pub mod item;
+pub mod market;
+pub mod population;
+pub mod technology;
 
 #[cfg(test)]
 mod tests;
