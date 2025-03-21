@@ -375,4 +375,19 @@ impl City {
             self.created_at.format("%d.%m.%Y")
         )
     }
+
+    pub fn subtract_resources(&mut self, resource_type: &ResourceType, amount: u32) -> bool {
+        let current = self.resources.get(resource_type);
+        
+        if current >= amount {
+            self.resources.subtract(resource_type, amount);
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn add_resources(&mut self, resource_type: &ResourceType, amount: u32) {
+        self.resources.add(resource_type, amount);
+    }
 }

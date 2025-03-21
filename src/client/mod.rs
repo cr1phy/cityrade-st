@@ -79,62 +79,58 @@ impl App {
             return Ok(());
         }
         match self.input_mode {
-            InputMode::Normal => {
-                match key.code {
-                    KeyCode::Char('q') => {
-                        self.should_quit = true;
-                    }
-                    KeyCode::Char('e') => {
-                        self.input_mode = InputMode::Editing;
-                    }
-                    KeyCode::Tab => {
-                        self.state.current_tab = (self.state.current_tab + 1) % 4;
-                    }
-                    KeyCode::BackTab => {
-                        self.state.current_tab = (self.state.current_tab + 3) % 4;
-                    }
-                    _ => {}
+            InputMode::Normal => match key.code {
+                KeyCode::Char('q') => {
+                    self.should_quit = true;
                 }
-            }
-            InputMode::Editing => {
-                match key.code {
-                    KeyCode::Esc => {
-                        self.input_mode = InputMode::Normal;
+                KeyCode::Char('e') => {
+                    self.input_mode = InputMode::Editing;
+                }
+                KeyCode::Tab => {
+                    self.state.current_tab = (self.state.current_tab + 1) % 4;
+                }
+                KeyCode::BackTab => {
+                    self.state.current_tab = (self.state.current_tab + 3) % 4;
+                }
+                _ => {}
+            },
+            InputMode::Editing => match key.code {
+                KeyCode::Esc => {
+                    self.input_mode = InputMode::Normal;
+                }
+                KeyCode::Enter => {
+                    let command = self.state.input.clone();
+                    if !command.trim().is_empty() {
+                        self.log(&format!("Executing: {}", command));
+                        self.state.command_history.push(command.clone());
+                        self.state.command_index = self.state.command_history.len();
+                        self.handle_command(&command)?;
                     }
-                    KeyCode::Enter => {
-                        let command = self.state.input.clone();
-                        if !command.trim().is_empty() {
-                            self.log(&format!("Executing: {}", command));
-                            self.state.command_history.push(command.clone());
-                            self.state.command_index = self.state.command_history.len();
-                            self.handle_command(&command)?;
-                        }
-                        self.state.input = String::new();
-                        self.state.input_cursor = 0;
+                    self.state.input = String::new();
+                    self.state.input_cursor = 0;
+                }
+                KeyCode::Char(c) => {
+                    self.state.input.insert(self.state.input_cursor, c);
+                    self.state.input_cursor += 1;
+                }
+                KeyCode::Backspace => {
+                    if self.state.input_cursor > 0 {
+                        self.state.input_cursor -= 1;
+                        self.state.input.remove(self.state.input_cursor);
                     }
-                    KeyCode::Char(c) => {
-                        self.state.input.insert(self.state.input_cursor, c);
+                }
+                KeyCode::Left => {
+                    if self.state.input_cursor > 0 {
+                        self.state.input_cursor -= 1;
+                    }
+                }
+                KeyCode::Right => {
+                    if self.state.input_cursor < self.state.input.len() {
                         self.state.input_cursor += 1;
                     }
-                    KeyCode::Backspace => {
-                        if self.state.input_cursor > 0 {
-                            self.state.input_cursor -= 1;
-                            self.state.input.remove(self.state.input_cursor);
-                        }
-                    }
-                    KeyCode::Left => {
-                        if self.state.input_cursor > 0 {
-                            self.state.input_cursor -= 1;
-                        }
-                    }
-                    KeyCode::Right => {
-                        if self.state.input_cursor < self.state.input.len() {
-                            self.state.input_cursor += 1;
-                        }
-                    }
-                    _ => {}
                 }
-            }
+                _ => {}
+            },
         }
         Ok(())
     }
@@ -245,7 +241,7 @@ impl App {
                             username
                         )))
                         .await;
-                    let resources = Some(cityrade_types::resources::Resources::default());
+                    let resources = Some(cityrade_types::resources::Resources::new());
                     let _ = tx.send(Message::GameUpdate { resources }).await;
                 });
             }

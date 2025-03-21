@@ -210,10 +210,31 @@ impl TradeManager {
                 completed_routes.push(index);
 
                 // Передаем ресурсы между городами
-                if let (Some(source_city), Some(target_city)) = (
-                    cities.get_mut(&route.source_city),
-                    cities.get_mut(&route.target_city),
-                ) {
+                if route.source_city == route.target_city {
+                    if let Some(city) = cities.get_mut(&route.source_city) {
+                        // Списываем ресурсы из города
+                        if city.subtract_resources(&route.resource, route.quantity) {
+                            // Добавляем ресурсы тому же городу
+                            city.add_resources(&route.resource, route.quantity);
+
+                            // Обновляем факторы спроса и предложения на рынке
+                            if let Some(market) = self.markets.get_mut(&route.source_city) {
+                                if let Some(supply_factor) = market.supply_factors.get_mut(&route.resource) {
+                                    *supply_factor -= 0.02; // Уменьшаем предложение
+                                }
+                                if let Some(demand_factor) = market.demand_factors.get_mut(&route.resource) {
+                                    *demand_factor -= 0.02; // Уменьшаем спрос
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    // Безопасно получаем два раздельных изменяемых заимствования используя raw pointers
+                    let (source_city, target_city) = {
+                        let source_ptr = cities.get_mut(&route.source_city).unwrap() as *mut City;
+                        let target_ptr = cities.get_mut(&route.target_city).unwrap() as *mut City;
+                        unsafe { (&mut *source_ptr, &mut *target_ptr) }
+                    };
                     // Списываем ресурсы из исходного города
                     if source_city.subtract_resources(&route.resource, route.quantity) {
                         // Добавляем ресурсы городу-получателю
@@ -221,18 +242,18 @@ impl TradeManager {
 
                         // Обновляем факторы спроса и предложения на рынках
                         if let Some(source_market) = self.markets.get_mut(&route.source_city) {
-                            if let Some(factor) =
+                            if let Some(supply_factor) =
                                 source_market.supply_factors.get_mut(&route.resource)
                             {
-                                *factor -= 0.02; // Уменьшаем предложение в исходном городе
+                                *supply_factor -= 0.02; // Уменьшаем предложение в исходном городе
                             }
                         }
 
                         if let Some(target_market) = self.markets.get_mut(&route.target_city) {
-                            if let Some(factor) =
+                            if let Some(demand_factor) =
                                 target_market.demand_factors.get_mut(&route.resource)
                             {
-                                *factor -= 0.02; // Уменьшаем спрос в городе-получателе
+                                *demand_factor -= 0.02; // Уменьшаем спрос в городе-получателе
                             }
                         }
                     }
