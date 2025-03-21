@@ -9,11 +9,11 @@ pub trait Plugin: Send + Sync {
     fn description(&self) -> String;
     fn author(&self) -> String;
     fn license(&self) -> String;
-    
+
     async fn initialize(&mut self) -> Result<(), Box<dyn std::error::Error>>;
     async fn on_enable(&mut self) -> Result<(), Box<dyn std::error::Error>>;
     async fn on_disable(&mut self) -> Result<(), Box<dyn std::error::Error>>;
-    
+
     fn as_any(&self) -> &dyn Any;
     fn as_any_mut(&mut self) -> &mut dyn Any;
 }

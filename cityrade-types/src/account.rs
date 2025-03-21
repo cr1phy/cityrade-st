@@ -1,7 +1,7 @@
-use serde::{Serialize, Deserialize};
-use chrono::{DateTime, Utc};
-use jsonwebtoken::{encode, EncodingKey, Header};
 use crate::resources::Resources;
+use chrono::{DateTime, Utc};
+use jsonwebtoken::{EncodingKey, Header, encode};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Account {
@@ -14,7 +14,12 @@ pub struct Account {
 }
 
 impl Account {
-    pub fn new(id: String, username: String, password_hash: String, resources: Resources) -> Account {
+    pub fn new(
+        id: String,
+        username: String,
+        password_hash: String,
+        resources: Resources,
+    ) -> Account {
         Account {
             id,
             username,
@@ -30,7 +35,12 @@ impl Account {
             sub: self.id.clone(),
             exp: (Utc::now() + chrono::Duration::days(1)).timestamp() as usize,
         };
-        let token = encode(&Header::default(), &claims, &EncodingKey::from_secret(std::env::var("KEY").unwrap().as_bytes())).unwrap();
+        let token = encode(
+            &Header::default(),
+            &claims,
+            &EncodingKey::from_secret(std::env::var("KEY").unwrap().as_bytes()),
+        )
+        .unwrap();
         token
     }
 

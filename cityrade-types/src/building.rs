@@ -1,21 +1,21 @@
-use serde::{Serialize, Deserialize};
 use crate::resources::{ResourceType, Resources};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum BuildingType {
-    Residential,  // Увеличивает лимит населения
-    Farm,         // Производит еду
-    LumberMill,   // Производит дерево
-    Mine,         // Производит камень и железо
-    Market,       // Увеличивает доход золота
-    Barracks,     // Тренирует войска
-    PowerPlant,   // Производит энергию
-    Laboratory,   // Исследования
-    Temple,       // Повышает счастье населения
-    WaterMill,    // Увеличивает производство ресурсов
-    Wall,         // Защита города
-    Workshop,     // Улучшает производство предметов
-    CrystalMine,  // Производит кристаллы
+    Residential, // Увеличивает лимит населения
+    Farm,        // Производит еду
+    LumberMill,  // Производит дерево
+    Mine,        // Производит камень и железо
+    Market,      // Увеличивает доход золота
+    Barracks,    // Тренирует войска
+    PowerPlant,  // Производит энергию
+    Laboratory,  // Исследования
+    Temple,      // Повышает счастье населения
+    WaterMill,   // Увеличивает производство ресурсов
+    Wall,        // Защита города
+    Workshop,    // Улучшает производство предметов
+    CrystalMine, // Производит кристаллы
 }
 
 impl BuildingType {
@@ -36,7 +36,7 @@ impl BuildingType {
             BuildingType::CrystalMine => "Кристальная шахта",
         }
     }
-    
+
     pub fn description(&self) -> &str {
         match self {
             BuildingType::Residential => "Увеличивает максимальное население города",
@@ -54,17 +54,11 @@ impl BuildingType {
             BuildingType::CrystalMine => "Добывает редкие магические кристаллы",
         }
     }
-    
+
     pub fn base_cost(&self) -> Vec<(ResourceType, u32)> {
         match self {
-            BuildingType::Residential => vec![
-                (ResourceType::Wood, 50),
-                (ResourceType::Stone, 30),
-            ],
-            BuildingType::Farm => vec![
-                (ResourceType::Wood, 30),
-                (ResourceType::Gold, 20),
-            ],
+            BuildingType::Residential => vec![(ResourceType::Wood, 50), (ResourceType::Stone, 30)],
+            BuildingType::Farm => vec![(ResourceType::Wood, 30), (ResourceType::Gold, 20)],
             BuildingType::LumberMill => vec![
                 (ResourceType::Wood, 20),
                 (ResourceType::Stone, 50),
@@ -106,10 +100,7 @@ impl BuildingType {
                 (ResourceType::Stone, 80),
                 (ResourceType::Gold, 100),
             ],
-            BuildingType::Wall => vec![
-                (ResourceType::Stone, 300),
-                (ResourceType::Iron, 100),
-            ],
+            BuildingType::Wall => vec![(ResourceType::Stone, 300), (ResourceType::Iron, 100)],
             BuildingType::Workshop => vec![
                 (ResourceType::Wood, 150),
                 (ResourceType::Stone, 100),
@@ -123,39 +114,27 @@ impl BuildingType {
             ],
         }
     }
-    
+
     pub fn production_effect(&self, level: u32) -> Vec<(ResourceType, i32)> {
         let base_effect = match self {
-            BuildingType::Residential => vec![
-                (ResourceType::Population, 10 + level as i32 * 5),
-            ],
-            BuildingType::Farm => vec![
-                (ResourceType::Food, 10 + level as i32 * 3),
-            ],
-            BuildingType::LumberMill => vec![
-                (ResourceType::Wood, 8 + level as i32 * 2),
-            ],
+            BuildingType::Residential => vec![(ResourceType::Population, 10 + level as i32 * 5)],
+            BuildingType::Farm => vec![(ResourceType::Food, 10 + level as i32 * 3)],
+            BuildingType::LumberMill => vec![(ResourceType::Wood, 8 + level as i32 * 2)],
             BuildingType::Mine => vec![
                 (ResourceType::Stone, 5 + level as i32),
                 (ResourceType::Iron, 2 + (level as i32) / 2),
             ],
-            BuildingType::Market => vec![
-                (ResourceType::Gold, 15 + level as i32 * 5),
-            ],
+            BuildingType::Market => vec![(ResourceType::Gold, 15 + level as i32 * 5)],
             BuildingType::Barracks => vec![
                 (ResourceType::Gold, -(10 + level as i32 * 2)),
                 (ResourceType::Food, -(5 + level as i32)),
             ],
-            BuildingType::PowerPlant => vec![
-                (ResourceType::Energy, 20 + level as i32 * 10),
-            ],
+            BuildingType::PowerPlant => vec![(ResourceType::Energy, 20 + level as i32 * 10)],
             BuildingType::Laboratory => vec![
                 (ResourceType::Gold, -(20 + level as i32 * 5)),
                 (ResourceType::Energy, -(5 + level as i32 * 2)),
             ],
-            BuildingType::Temple => vec![
-                (ResourceType::Gold, -(10 + level as i32 * 3)),
-            ],
+            BuildingType::Temple => vec![(ResourceType::Gold, -(10 + level as i32 * 3))],
             BuildingType::WaterMill => vec![
                 (ResourceType::Food, 5 + level as i32),
                 (ResourceType::Wood, 5 + level as i32),
@@ -180,11 +159,16 @@ pub struct Building {
     pub name: String,
     pub building_type: BuildingType,
     pub level: u32,
-    pub position: (i32, i32),  // Координаты на карте города
+    pub position: (i32, i32), // Координаты на карте города
 }
 
 impl Building {
-    pub fn new(id: String, name: String, building_type: BuildingType, position: (i32, i32)) -> Building {
+    pub fn new(
+        id: String,
+        name: String,
+        building_type: BuildingType,
+        position: (i32, i32),
+    ) -> Building {
         Building {
             id,
             name,
@@ -193,35 +177,36 @@ impl Building {
             position,
         }
     }
-    
+
     pub fn upgrade(&mut self) {
         self.level += 1;
     }
-    
+
     pub fn get_info(&self) -> String {
         format!(
-            "{} ({}), Уровень: {}\nТип: {}\nОписание: {}", 
-            self.name, 
+            "{} ({}), Уровень: {}\nТип: {}\nОписание: {}",
+            self.name,
             self.id,
-            self.level, 
+            self.level,
             self.building_type.display_name(),
             self.building_type.description()
         )
     }
-    
+
     pub fn upgrade_cost(&self) -> Vec<(ResourceType, u32)> {
         let base_costs = self.building_type.base_cost();
         let multiplier = (1.5f32).powi(self.level as i32);
-        
-        base_costs.iter()
-            .map(|(rt, &amount)| (rt.clone(), (amount as f32 * multiplier) as u32))
+
+        base_costs
+            .iter()
+            .map(|(rt, amount)| (rt.clone(), (*amount as f32 * multiplier) as u32))
             .collect()
     }
-    
+
     pub fn production_effect(&self) -> Vec<(ResourceType, i32)> {
         self.building_type.production_effect(self.level)
     }
-    
+
     pub fn apply_production_to_resources(&self, resources: &mut Resources) {
         for (resource, amount) in self.production_effect() {
             if amount > 0 {
